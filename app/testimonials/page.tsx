@@ -4,6 +4,8 @@ import { SectionCard } from "@/components/section-card";
 import { TestimonialsTableClient } from "@/components/testimonials-table-client";
 import { getTestimonialList } from "@/lib/repositories/testimonials";
 
+export const dynamic = "force-dynamic";
+
 export default async function TestimonialsPage() {
   const testimonialBoard = await getTestimonialList();
 
