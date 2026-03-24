@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(uuid()) @db.Uuid
+  fullName     String        @map("full_name") @db.VarChar(120)
+  email        String        @unique @db.VarChar(160)
+  passwordHash String?       @map("password_hash") @db.VarChar(255)
+  phone        String?       @db.VarChar(20)
+  role         String        @db.VarChar(30)
+  isActive     Boolean       @default(true) @map("is_active")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  assignedLeads Lead[]       @relation("LeadAssignments")
+  leadNotes    LeadNote[]
+  appointments Appointment[] @relation("AppointmentCreatedBy")
+  testimonials MediaAsset[]  @relation("MediaUploadedBy")
+  activityLogs ActivityLog[]
+
+  @@map("users")
+}
+
+model LeadSource {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique @db.VarChar(80)
+  channelType String   @map("channel_type") @db.VarChar(40)
+  createdAt   DateTime @default(now()) @map("created_at")
+  leads       Lead[]
+
+  @@map("lead_sources")
+}
+
+model Lead {
+  id                    String         @id @default(uuid()) @db.Uuid
+  patientName           String         @map("patient_name") @db.VarChar(120)
+  phone                 String         @db.VarChar(20)
+  alternatePhone        String?        @map("alternate_phone") @db.VarChar(20)
+  city                  String?        @db.VarChar(80)
+  treatmentInterest     String?        @map("treatment_interest") @db.VarChar(120)
+  sourceId              String?        @map("source_id") @db.Uuid
+  campaignName          String?        @map("campaign_name") @db.VarChar(120)
+  assignedToId          String?        @map("assigned_to") @db.Uuid
+  status                String         @db.VarChar(40)
+  pipelineStage         String         @default("Inquiry") @map("pipeline_stage") @db.VarChar(40)
+  isTestimonialEligible Boolean        @default(false) @map("is_testimonial_eligible")
+  createdAt             DateTime       @default(now()) @map("created_at")
+  updatedAt             DateTime       @updatedAt @map("updated_at")
+  source                LeadSource?    @relation(fields: [sourceId], references: [id])
+  assignedTo            User?          @relation("LeadAssignments", fields: [assignedToId], references: [id])
+  notes                 LeadNote[]
+  appointments          Appointment[]
+  testimonials          Testimonial[]
+  mediaAssets           MediaAsset[]
+
+  @@map("leads")
+}
+
+model LeadNote {
+  id             String    @id @default(uuid()) @db.Uuid
+  leadId         String    @map("lead_id") @db.Uuid
+  addedById      String?   @map("added_by") @db.Uuid
+  noteText       String    @map("note_text")
+  callOutcome    String?   @map("call_outcome") @db.VarChar(40)
+  nextFollowUpAt DateTime? @map("next_follow_up_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  lead           Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  addedBy        User?     @relation(fields: [addedById], references: [id])
+
+  @@map("lead_notes")
+}
+
+model Appointment {
+  id            String   @id @default(uuid()) @db.Uuid
+  leadId        String   @map("lead_id") @db.Uuid
+  appointmentAt DateTime @map("appointment_at")
+  doctorName    String?  @map("doctor_name") @db.VarChar(120)
+  status        String   @db.VarChar(40)
+  createdById   String?  @map("created_by") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+  lead          Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  createdBy     User?    @relation("AppointmentCreatedBy", fields: [createdById], references: [id])
+
+  @@map("appointments")
+}
+
+model Testimonial {
+  id                String       @id @default(uuid()) @db.Uuid
+  leadId            String       @map("lead_id") @db.Uuid
+  requestStatus     String       @default("Pending Request") @map("request_status") @db.VarChar(40)
+  testimonialType   String?      @map("testimonial_type") @db.VarChar(20)
+  consentStatus     String       @default("Pending") @map("consent_status") @db.VarChar(40)
+  approvalStatus    String       @default("Pending") @map("approval_status") @db.VarChar(40)
+  publicationStatus String       @default("Draft") @map("publication_status") @db.VarChar(40)
+  requestedAt       DateTime?    @map("requested_at")
+  receivedAt        DateTime?    @map("received_at")
+  approvedAt        DateTime?    @map("approved_at")
+  notes             String?
+  createdAt         DateTime     @default(now()) @map("created_at")
+  lead              Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  mediaAssets       MediaAsset[]
+
+  @@map("testimonials")
+}
+
+model MediaAsset {
+  id              String       @id @default(uuid()) @db.Uuid
+  testimonialId   String?      @map("testimonial_id") @db.Uuid
+  leadId          String?      @map("lead_id") @db.Uuid
+  fileName        String       @map("file_name") @db.VarChar(160)
+  fileType        String       @map("file_type") @db.VarChar(40)
+  fileUrl         String       @map("file_url")
+  department      String?      @db.VarChar(80)
+  treatmentTag    String?      @map("treatment_tag") @db.VarChar(80)
+  doctorTag       String?      @map("doctor_tag") @db.VarChar(80)
+  approvalStatus  String       @default("Pending") @map("approval_status") @db.VarChar(40)
+  consentAttached Boolean      @default(false) @map("consent_attached")
+  uploadedById    String?      @map("uploaded_by") @db.Uuid
+  createdAt       DateTime     @default(now()) @map("created_at")
+  testimonial     Testimonial? @relation(fields: [testimonialId], references: [id], onDelete: SetNull)
+  lead            Lead?        @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  uploadedBy      User?        @relation("MediaUploadedBy", fields: [uploadedById], references: [id])
+
+  @@map("media_assets")
+}
+
+model ActivityLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  entityType  String   @map("entity_type") @db.VarChar(40)
+  entityId    String   @map("entity_id") @db.Uuid
+  action      String   @db.VarChar(60)
+  performedBy String?  @map("performed_by") @db.Uuid
+  meta        Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  user        User?    @relation(fields: [performedBy], references: [id])
+
+  @@map("activity_logs")
+}
