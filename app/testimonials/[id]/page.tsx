@@ -5,6 +5,8 @@ import { MediaUploadForm } from "@/components/media-upload-form";
 import { SectionCard } from "@/components/section-card";
 import { getTestimonialDetail } from "@/lib/repositories/testimonials";
 
+export const dynamic = "force-dynamic";
+
 export default async function TestimonialDetailPage({
   params
 }: Readonly<{ params: Promise<{ id: string }> }>) {
