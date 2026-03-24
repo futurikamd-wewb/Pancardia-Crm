@@ -1,104 +1,126 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard-shell";
-import { FollowUpForm } from "@/components/follow-up-form";
+import { MediaUploadForm } from "@/components/media-upload-form";
 import { SectionCard } from "@/components/section-card";
-import { getLeadDetail } from "@/lib/repositories/leads";
+import { getTestimonialDetail } from "@/lib/repositories/testimonials";
 
-export default async function LeadDetailPage({
+export const dynamic = "force-dynamic";
+
+export default async function TestimonialDetailPage({
   params
 }: Readonly<{ params: Promise<{ id: string }> }>) {
   const { id } = await params;
-  const lead = await getLeadDetail(id);
+  const testimonial = await getTestimonialDetail(id);
 
-  if (!lead) {
+  if (!testimonial) {
     notFound();
   }
 
   return (
-    <DashboardShell activePath="/leads">
+    <DashboardShell activePath="/testimonials">
       <section className="page-banner">
-        <span className="eyebrow">Patient CRM Record</span>
-        <h2>Pancardia lead profile and counseling history</h2>
+        <span className="eyebrow">Patient Story Record</span>
+        <h2>Pancardia testimonial review and media control</h2>
         <p>
-          Is page par patient context, assignment, status progression aur follow-up notes ek saath
-          dikhte hain.
+          Consent state, approval, publication readiness aur attached media ko yahan se monitor karo.
         </p>
       </section>
 
       <section className="hero">
         <div>
-          <span className="eyebrow">Lead Detail</span>
-          <h2>{lead.patientName}</h2>
+          <span className="eyebrow">Testimonial Detail</span>
+          <h2>{testimonial.patientName}</h2>
           <p>
-            {lead.treatmentInterest} | {lead.city} | {lead.source}
+            {testimonial.treatment} | {testimonial.type} | {testimonial.owner}
           </p>
         </div>
         <div className="hero-actions">
-          <Link className="pill-button" href={`/leads/${lead.id}/edit`}>
-            Edit Lead
+          <Link className="pill-button" href={`/testimonials/${testimonial.id}/edit`}>
+            Edit Testimonial
           </Link>
-          <Link className="ghost-button" href="/leads">
-            Back to Leads
+          <Link className="ghost-button" href="/testimonials">
+            Back to Testimonials
           </Link>
         </div>
       </section>
 
       <section className="grid content-grid">
         <div className="section-stack">
-          <SectionCard title="Patient Snapshot" subtitle="Lead owner, stage aur next action yahan visible hai.">
+          <SectionCard
+            title="Request Snapshot"
+            subtitle="Consent aur approval state ko yahan se clearly monitor karo."
+          >
             <div className="meta-grid">
               <div className="meta-card">
-                <strong>Phone</strong>
-                <div className="muted">{lead.phone}</div>
+                <strong>Request Status</strong>
+                <div className="muted">{testimonial.requestStatus}</div>
               </div>
               <div className="meta-card">
-                <strong>Status</strong>
-                <div className="tag">{lead.status}</div>
-              </div>
-              <div className="meta-card">
-                <strong>Assigned Counselor</strong>
-                <div className="muted">{lead.assignedTo}</div>
-              </div>
-              <div className="meta-card">
-                <strong>Pipeline Stage</strong>
-                <div className="tag">{lead.pipelineStage}</div>
-              </div>
-              <div className="meta-card">
-                <strong>Next Follow-up</strong>
-                <div className="muted">{lead.nextFollowUp}</div>
-              </div>
-              <div className="meta-card">
-                <strong>City / Department</strong>
-                <div className="muted">
-                  {lead.city} | {lead.treatmentInterest}
+                <strong>Consent</strong>
+                <div className={`tag${testimonial.consent === "Pending" ? " danger" : ""}`}>
+                  {testimonial.consent}
                 </div>
+              </div>
+              <div className="meta-card">
+                <strong>Approval</strong>
+                <div className={`tag${testimonial.approval === "Approved" ? "" : " warn"}`}>
+                  {testimonial.approval}
+                </div>
+              </div>
+              <div className="meta-card">
+                <strong>Publication</strong>
+                <div className="muted">{testimonial.publicationStatus}</div>
+              </div>
+              <div className="meta-card">
+                <strong>Owner</strong>
+                <div className="muted">{testimonial.owner}</div>
+              </div>
+              <div className="meta-card">
+                <strong>Type</strong>
+                <div className="muted">{testimonial.type}</div>
+              </div>
+              <div className="meta-card" style={{ gridColumn: "1 / -1" }}>
+                <strong>Notes</strong>
+                <div className="muted">{testimonial.notes || "No notes yet"}</div>
               </div>
             </div>
           </SectionCard>
 
-          <SectionCard title="Follow-up Timeline" subtitle="Latest notes upar dikhengi.">
+          <SectionCard title="Attached Media" subtitle="Consent proof ke bina asset ko publish-ready mat mano.">
             <div className="list">
-              {lead.notes.map((note) => (
-                <div className="list-item" key={note.id}>
+              {testimonial.media.map((asset) => (
+                <div className="list-item" key={asset.id}>
                   <div>
-                    <strong>{note.noteText}</strong>
+                    <strong>{asset.fileName}</strong>
                     <div className="muted">
-                      {note.createdAt} | {note.nextFollowUp}
+                      {asset.fileType} | {asset.department} | {asset.treatmentTag}
+                    </div>
+                    <div className="muted">
+                      <a href={asset.fileUrl} rel="noreferrer" target="_blank">
+                        Open file
+                      </a>
                     </div>
                   </div>
-                  <span className="tag">{note.callOutcome}</span>
+                  <div>
+                    <span className={`tag${asset.consentAttached ? "" : " danger"}`}>
+                      {asset.consentAttached ? "Consent Attached" : "Consent Missing"}
+                    </span>{" "}
+                    <span className={`tag${asset.approvalStatus === "Approved" ? "" : " warn"}`}>
+                      {asset.approvalStatus}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
           </SectionCard>
         </div>
 
-        <SectionCard title="Add Follow-up" subtitle="Har call ke baad note aur next reminder record karo.">
-          <FollowUpForm leadId={lead.id} />
-          <p className="inline-note">
-            Database connect hone par notes persist honge. Mock mode me flow test ke liye ready hai.
-          </p>
+        <SectionCard
+          title="Attach Media"
+          subtitle="Yahan se local storage me file save hogi aur testimonial ke saath link ho jayegi."
+        >
+          <MediaUploadForm testimonialId={testimonial.id} />
         </SectionCard>
       </section>
     </DashboardShell>
