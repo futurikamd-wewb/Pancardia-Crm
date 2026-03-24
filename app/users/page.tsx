@@ -3,6 +3,8 @@ import { SectionCard } from "@/components/section-card";
 import { UsersTableClient } from "@/components/users-table-client";
 import { getUserList } from "@/lib/repositories/users";
 
+export const dynamic = "force-dynamic";
+
 export default async function UsersPage() {
   const users = await getUserList();
 
