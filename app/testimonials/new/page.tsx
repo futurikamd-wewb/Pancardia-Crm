@@ -3,6 +3,8 @@ import { SectionCard } from "@/components/section-card";
 import { TestimonialRequestForm } from "@/components/testimonial-request-form";
 import { getLeadList } from "@/lib/repositories/leads";
 
+export const dynamic = "force-dynamic";
+
 export default async function NewTestimonialPage() {
   const leads = await getLeadList();
   const leadOptions = leads.map((lead) => ({
