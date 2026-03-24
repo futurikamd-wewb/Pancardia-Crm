@@ -4,6 +4,8 @@ import { SectionCard } from "@/components/section-card";
 import { StatCard } from "@/components/stat-card";
 import { getDashboardData } from "@/lib/repositories/dashboard";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const { stats, freshLeads, followUps, queue } = await getDashboardData();
 
