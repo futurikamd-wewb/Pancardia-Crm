@@ -4,6 +4,8 @@ import { SectionCard } from "@/components/section-card";
 import { TestimonialEditForm } from "@/components/testimonial-edit-form";
 import { getTestimonialDetail } from "@/lib/repositories/testimonials";
 
+export const dynamic = "force-dynamic";
+
 export default async function EditTestimonialPage({
   params
 }: Readonly<{ params: Promise<{ id: string }> }>) {
