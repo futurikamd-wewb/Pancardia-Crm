@@ -1,37 +1,44 @@
 import { notFound } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard-shell";
-import { LeadEditForm } from "@/components/lead-edit-form";
 import { SectionCard } from "@/components/section-card";
-import { getLeadDetail } from "@/lib/repositories/leads";
+import { TestimonialEditForm } from "@/components/testimonial-edit-form";
+import { getTestimonialDetail } from "@/lib/repositories/testimonials";
 
-export default async function EditLeadPage({
+export const dynamic = "force-dynamic";
+
+export default async function EditTestimonialPage({
   params
 }: Readonly<{ params: Promise<{ id: string }> }>) {
   const { id } = await params;
-  const lead = await getLeadDetail(id);
+  const testimonial = await getTestimonialDetail(id);
 
-  if (!lead) {
+  if (!testimonial) {
     notFound();
   }
 
   return (
-    <DashboardShell activePath="/leads">
+    <DashboardShell activePath="/testimonials">
       <section className="page-banner">
-        <span className="eyebrow">Lead Maintenance</span>
-        <h2>Update Pancardia patient lead details</h2>
-        <p>Ownership, source, status aur patient record quality ko yahan se clean rakho.</p>
+        <span className="eyebrow">Testimonial Maintenance</span>
+        <h2>Update consent, approval and publication state</h2>
+        <p>
+          Content aur marketing team yahan se testimonial workflow ko clean aur compliant rakh sakte hain.
+        </p>
       </section>
 
       <section className="hero">
         <div>
-          <span className="eyebrow">Edit Lead</span>
-          <h2>{lead.patientName}</h2>
-          <p>Owner, source aur stage ko update karo.</p>
+          <span className="eyebrow">Edit Testimonial</span>
+          <h2>{testimonial.patientName}</h2>
+          <p>Consent, approval aur publication state update karo.</p>
         </div>
       </section>
 
-      <SectionCard title="Lead Settings" subtitle="Structured update panel for counselors and admin.">
-        <LeadEditForm lead={lead} />
+      <SectionCard
+        title="Testimonial Settings"
+        subtitle="Structured update panel for content and marketing teams."
+      >
+        <TestimonialEditForm testimonial={testimonial} />
       </SectionCard>
     </DashboardShell>
   );
