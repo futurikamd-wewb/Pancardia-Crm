@@ -3,137 +3,136 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export function MediaUploadForm({ testimonialId }: Readonly<{ testimonialId: string }>) {
+type MediaUploadFormProps = {
+  testimonialId: string;
+};
+
+export function MediaUploadForm({ testimonialId }: Readonly<MediaUploadFormProps>) {
   const router = useRouter();
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [formData, setFormData] = useState({
-    department: "",
-    treatmentTag: "",
-    approvalStatus: "Pending",
-    consentAttached: false
-  });
+  const [file, setFile] = useState<File | null>(null);
+  const [department, setDepartment] = useState("");
+  const [treatmentTag, setTreatmentTag] = useState("");
+  const [doctorTag, setDoctorTag] = useState("");
+  const [approvalStatus, setApprovalStatus] = useState("Pending");
+  const [consentAttached, setConsentAttached] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState("");
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!file) {
+      setMessage("Choose a file first.");
+      return;
+    }
+
     setSubmitting(true);
-    setError(null);
+    setMessage("");
 
-    if (!selectedFile) {
-      setError("Actual file select karna required hai.");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("department", department);
+      formData.append("treatmentTag", treatmentTag);
+      formData.append("doctorTag", doctorTag);
+      formData.append("approvalStatus", approvalStatus);
+      formData.append("consentAttached", String(consentAttached));
+
+      const response = await fetch(`/api/testimonials/${testimonialId}/media`, {
+        method: "POST",
+        body: formData
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.error ?? "Upload failed");
+      }
+
+      setMessage("Media uploaded.");
+      setFile(null);
+      setDepartment("");
+      setTreatmentTag("");
+      setDoctorTag("");
+      setApprovalStatus("Pending");
+      setConsentAttached(false);
+      event.currentTarget.reset();
+      router.refresh();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Upload failed");
+    } finally {
       setSubmitting(false);
-      return;
     }
-
-    const payload = new FormData();
-    payload.append("file", selectedFile);
-    payload.append("department", formData.department);
-    payload.append("treatmentTag", formData.treatmentTag);
-    payload.append("approvalStatus", formData.approvalStatus);
-    payload.append("consentAttached", formData.consentAttached ? "yes" : "no");
-
-    const response = await fetch(`/api/testimonials/${testimonialId}/media`, {
-      method: "POST",
-      body: payload
-    });
-
-    if (!response.ok) {
-      const data = (await response.json()) as { error?: string };
-      setError(data.error ?? "Media save nahi hua.");
-      setSubmitting(false);
-      return;
-    }
-
-    setSelectedFile(null);
-    setFormData({
-      department: "",
-      treatmentTag: "",
-      approvalStatus: "Pending",
-      consentAttached: false
-    });
-    router.refresh();
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="form-grid">
-        <div className="field full">
-          <label htmlFor="file">Upload file</label>
+    <form className="crm-form" onSubmit={handleSubmit}>
+      <div className="form-grid two-column">
+        <label className="field field-full">
+          <span className="field-label">Choose File</span>
           <input
-            id="file"
-            required
+            accept="image/*,video/*,.pdf,.doc,.docx"
+            name="file"
+            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
             type="file"
-            onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
           />
-        </div>
+        </label>
 
-        <div className="field">
-          <label htmlFor="department">Department</label>
+        <label className="field">
+          <span className="field-label">Department</span>
           <input
-            id="department"
-            value={formData.department}
-            onChange={(event) =>
-              setFormData((current) => ({ ...current, department: event.target.value }))
-            }
+            onChange={(event) => setDepartment(event.target.value)}
+            placeholder="Cardiology"
+            value={department}
           />
-        </div>
+        </label>
 
-        <div className="field">
-          <label htmlFor="treatmentTag">Treatment tag</label>
+        <label className="field">
+          <span className="field-label">Treatment Tag</span>
           <input
-            id="treatmentTag"
-            value={formData.treatmentTag}
-            onChange={(event) =>
-              setFormData((current) => ({ ...current, treatmentTag: event.target.value }))
-            }
+            onChange={(event) => setTreatmentTag(event.target.value)}
+            placeholder="Angioplasty"
+            value={treatmentTag}
           />
-        </div>
+        </label>
 
-        <div className="field">
-          <label htmlFor="approvalStatus">Approval status</label>
-          <select
-            id="approvalStatus"
-            value={formData.approvalStatus}
-            onChange={(event) =>
-              setFormData((current) => ({ ...current, approvalStatus: event.target.value }))
-            }
-          >
-            <option>Pending</option>
-            <option>Under Review</option>
-            <option>Approved</option>
-          </select>
-        </div>
+        <label className="field">
+          <span className="field-label">Doctor Tag</span>
+          <input
+            onChange={(event) => setDoctorTag(event.target.value)}
+            placeholder="Dr. Sharma"
+            value={doctorTag}
+          />
+        </label>
 
-        <div className="field">
-          <label htmlFor="consentAttached">Consent attached</label>
+        <label className="field">
+          <span className="field-label">Approval</span>
           <select
-            id="consentAttached"
-            value={formData.consentAttached ? "yes" : "no"}
-            onChange={(event) =>
-              setFormData((current) => ({
-                ...current,
-                consentAttached: event.target.value === "yes"
-              }))
-            }
+            onChange={(event) => setApprovalStatus(event.target.value)}
+            value={approvalStatus}
           >
-            <option value="no">No</option>
-            <option value="yes">Yes</option>
+            <option value="Pending">Pending</option>
+            <option value="Under Review">Under Review</option>
+            <option value="Approved">Approved</option>
           </select>
-        </div>
+        </label>
+
+        <label className="field">
+          <span className="field-label">Consent Attached</span>
+          <input
+            checked={consentAttached}
+            onChange={(event) => setConsentAttached(event.target.checked)}
+            type="checkbox"
+          />
+        </label>
       </div>
 
-      {error ? <p className="inline-note">{error}</p> : null}
+      {message ? <p className="inline-note">{message}</p> : null}
 
-      <div className="form-actions">
+      <div className="hero-actions">
         <button className="pill-button" disabled={submitting} type="submit">
-          {submitting ? "Saving..." : "Attach Media"}
+          {submitting ? "Uploading..." : "Upload Media"}
         </button>
       </div>
-
-      <p className="inline-note">
-        Selected file: {selectedFile ? selectedFile.name : "No file selected"}
-      </p>
     </form>
   );
 }
