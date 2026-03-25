@@ -4,6 +4,7 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { MediaUploadForm } from "@/components/media-upload-form";
 import { SectionCard } from "@/components/section-card";
 import { getTestimonialDetail } from "@/lib/repositories/testimonials";
+import { MediaAssetManager } from "@/components/media-asset-manager";
 
 export const dynamic = "force-dynamic";
 
