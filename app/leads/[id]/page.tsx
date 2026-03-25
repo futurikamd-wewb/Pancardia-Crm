@@ -5,6 +5,7 @@ import { FollowUpForm } from "@/components/follow-up-form";
 import { SectionCard } from "@/components/section-card";
 import { getLeadDetail } from "@/lib/repositories/leads";
 import { LeadDetailActions } from "@/components/lead-detail-actions";
+{/* Lead detail form view */}
 
 export const dynamic = "force-dynamic";
 
