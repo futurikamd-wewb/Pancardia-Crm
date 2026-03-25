@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard-shell";
+import { MediaAssetManager } from "@/components/media-asset-manager";
 import { MediaUploadForm } from "@/components/media-upload-form";
 import { SectionCard } from "@/components/section-card";
 import { getTestimonialDetail } from "@/lib/repositories/testimonials";
-import { MediaAssetManager } from "@/components/media-asset-manager";
 
 export const dynamic = "force-dynamic";
 
@@ -88,38 +88,14 @@ export default async function TestimonialDetailPage({
             </div>
           </SectionCard>
 
-          <SectionCard title="Attached Media" subtitle="Consent proof ke bina asset ko publish-ready mat mano.">
-            <div className="list">
-              {testimonial.media.map((asset) => (
-                <div className="list-item" key={asset.id}>
-                  <div>
-                    <strong>{asset.fileName}</strong>
-                    <div className="muted">
-                      {asset.fileType} | {asset.department} | {asset.treatmentTag}
-                    </div>
-                    <div className="muted">
-                      <a href={asset.fileUrl} rel="noreferrer" target="_blank">
-                        Open file
-                      </a>
-                    </div>
-                  </div>
-                  <div>
-                    <span className={`tag${asset.consentAttached ? "" : " danger"}`}>
-                      {asset.consentAttached ? "Consent Attached" : "Consent Missing"}
-                    </span>{" "}
-                    <span className={`tag${asset.approvalStatus === "Approved" ? "" : " warn"}`}>
-                      {asset.approvalStatus}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <SectionCard title="Attached Media" subtitle="Preview, edit, share, and delete media here.">
+            <MediaAssetManager assets={testimonial.media} />
           </SectionCard>
         </div>
 
         <SectionCard
           title="Attach Media"
-          subtitle="Yahan se local storage me file save hogi aur testimonial ke saath link ho jayegi."
+          subtitle="Upload file and keep consent and media in one place."
         >
           <MediaUploadForm testimonialId={testimonial.id} />
         </SectionCard>
