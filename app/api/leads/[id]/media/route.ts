@@ -1,6 +1,4 @@
 import { randomUUID } from "crypto";
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -27,22 +25,53 @@ export async function POST(
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const uploadDirectory = path.join(process.cwd(), "public", "uploads", "leads");
-    await mkdir(uploadDirectory, { recursive: true });
+    const uploadFormData = new FormData();
+    uploadFormData.append("file", new Blob([buffer]), file.name);
+    uploadFormData.append("upload_preset", "ml_default");
 
-    const safeName = file.name.replace(/\s+/g, "-");
-    const storedFileName = `${Date.now()}-${safeName}`;
-    const filePath = path.join(uploadDirectory, storedFileName);
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
-    await writeFile(filePath, buffer);
+    if (!cloudName || !apiKey || !apiSecret) {
+      return NextResponse.json(
+        { error: "Cloudinary environment variables are missing" },
+        { status: 500 }
+      );
+    }
+
+    const cloudinaryResponse = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
+      {
+        method: "POST",
+        body: uploadFormData
+      }
+    );
+
+    const cloudinaryPayload = (await cloudinaryResponse.json()) as {
+      secure_url?: string;
+      original_filename?: string;
+      error?: { message?: string };
+    };
+
+    if (!cloudinaryResponse.ok || !cloudinaryPayload.secure_url) {
+      return NextResponse.json(
+        {
+          error:
+            cloudinaryPayload.error?.message ??
+            "Cloudinary upload failed"
+        },
+        { status: 500 }
+      );
+    }
 
     const media = await prisma.mediaAsset.create({
       data: {
         id: randomUUID(),
         leadId,
-        fileName: file.name,
+        fileName: file.name || cloudinaryPayload.original_filename || "uploaded-file",
         fileType: file.type || "application/octet-stream",
-        fileUrl: `/uploads/leads/${storedFileName}`,
+        fileUrl: cloudinaryPayload.secure_url,
         department: department || null,
         treatmentTag: treatmentTag || null,
         doctorTag: doctorTag || null,
