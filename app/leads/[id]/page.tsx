@@ -4,6 +4,7 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { FollowUpForm } from "@/components/follow-up-form";
 import { SectionCard } from "@/components/section-card";
 import { getLeadDetail } from "@/lib/repositories/leads";
+import { LeadDetailActions } from "@/components/lead-detail-actions";
 
 export const dynamic = "force-dynamic";
 
