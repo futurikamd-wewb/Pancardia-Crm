@@ -20,6 +20,18 @@ export type LeadNoteItem = {
   createdAt: string;
 };
 
+export type LeadMediaItem = {
+  id: string;
+  fileName: string;
+  fileType: string;
+  fileUrl: string;
+  category: "image" | "video" | "document" | "consent";
+  department: string;
+  treatmentTag: string;
+  approvalStatus: string;
+  consentAttached: boolean;
+};
+
 export type LeadDetailItem = {
   id: string;
   patientName: string;
@@ -32,7 +44,24 @@ export type LeadDetailItem = {
   pipelineStage: string;
   nextFollowUp: string;
   notes: LeadNoteItem[];
+  media: LeadMediaItem[];
 };
+
+function getMediaCategory(fileType: string, consentAttached: boolean): LeadMediaItem["category"] {
+  if (consentAttached) {
+    return "consent";
+  }
+
+  if (fileType.startsWith("image/")) {
+    return "image";
+  }
+
+  if (fileType.startsWith("video/")) {
+    return "video";
+  }
+
+  return "document";
+}
 
 export async function getLeadList(): Promise<LeadListItem[]> {
   if (!process.env.DATABASE_URL) {
@@ -97,6 +126,7 @@ export async function getLeadDetail(id: string): Promise<LeadDetailItem | null> 
     }
 
     const override = await getMockLeadOverride(id);
+
     return {
       id: lead.id,
       patientName: override?.patientName ?? lead.patientName,
@@ -108,7 +138,8 @@ export async function getLeadDetail(id: string): Promise<LeadDetailItem | null> 
       status: override?.status ?? lead.status,
       pipelineStage: override?.pipelineStage ?? lead.pipelineStage,
       nextFollowUp: override?.nextFollowUp ?? lead.nextFollowUp,
-      notes: [...lead.notes]
+      notes: [...lead.notes],
+      media: []
     };
   }
 
@@ -119,6 +150,11 @@ export async function getLeadDetail(id: string): Promise<LeadDetailItem | null> 
       source: true,
       assignedTo: true,
       notes: {
+        orderBy: {
+          createdAt: "desc"
+        }
+      },
+      mediaAssets: {
         orderBy: {
           createdAt: "desc"
         }
@@ -160,6 +196,17 @@ export async function getLeadDetail(id: string): Promise<LeadDetailItem | null> 
         dateStyle: "medium",
         timeStyle: "short"
       }).format(note.createdAt)
+    })),
+    media: lead.mediaAssets.map((asset) => ({
+      id: asset.id,
+      fileName: asset.fileName,
+      fileType: asset.fileType,
+      fileUrl: asset.fileUrl,
+      category: getMediaCategory(asset.fileType, asset.consentAttached),
+      department: asset.department ?? "-",
+      treatmentTag: asset.treatmentTag ?? "-",
+      approvalStatus: asset.approvalStatus,
+      consentAttached: asset.consentAttached
     }))
   };
 }
