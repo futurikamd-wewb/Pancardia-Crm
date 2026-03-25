@@ -42,12 +42,7 @@ export default async function LeadDetailPage({
           <a className="ghost-button" href={`/leads/${lead.id}?print=1`} target="_blank" rel="noreferrer">
             Download
           </a>
-          <button className="ghost-button" type="button">
-            Share
-          </button>
-          <button className="ghost-button" type="button">
-            Delete
-          </button>
+          <LeadDetailActions leadId={lead.id} />
         </div>
       </section>
 
