@@ -2,10 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { FollowUpForm } from "@/components/follow-up-form";
+import { LeadDetailActions } from "@/components/lead-detail-actions";
 import { SectionCard } from "@/components/section-card";
 import { getLeadDetail } from "@/lib/repositories/leads";
-import { LeadDetailActions } from "@/components/lead-detail-actions";
-{/* Lead detail form view */}
 
 export const dynamic = "force-dynamic";
 
@@ -40,9 +39,6 @@ export default async function LeadDetailPage({
           <Link className="pill-button" href={`/leads/${lead.id}/edit`}>
             Edit
           </Link>
-          <a className="ghost-button" href={`/leads/${lead.id}?print=1`} target="_blank" rel="noreferrer">
-            Download
-          </a>
           <LeadDetailActions leadId={lead.id} />
         </div>
       </section>
