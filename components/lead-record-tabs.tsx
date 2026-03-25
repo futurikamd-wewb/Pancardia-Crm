@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { FollowUpForm } from "@/components/follow-up-form";
+import { LeadMediaUploadForm } from "@/components/lead-media-upload-form";
 import { MediaAssetManager } from "@/components/media-asset-manager";
 import { SectionCard } from "@/components/section-card";
 import type { LeadDetailItem } from "@/lib/repositories/leads";
@@ -129,6 +130,10 @@ export function LeadRecordTabs({ lead }: Readonly<LeadRecordTabsProps>) {
 
       {activeTab === "media" ? (
         <div className="section-stack">
+          <SectionCard title="Upload Patient Media" subtitle="Add patient-specific media here">
+            <LeadMediaUploadForm leadId={lead.id} />
+          </SectionCard>
+
           <SectionCard title="Patient Media" subtitle="All patient files grouped by category">
             {lead.media.length ? (
               <div className="section-stack">
@@ -139,19 +144,19 @@ export function LeadRecordTabs({ lead }: Readonly<LeadRecordTabsProps>) {
                 ) : null}
 
                 {groupedMedia.video.length ? (
-                  <SectionCard title="Videos" subtitle="Video testimonials and recordings">
+                  <SectionCard title="Videos" subtitle="Video files and recordings">
                     <MediaAssetManager assets={groupedMedia.video} />
                   </SectionCard>
                 ) : null}
 
                 {groupedMedia.document.length ? (
-                  <SectionCard title="Documents" subtitle="Reports and other files">
+                  <SectionCard title="Documents" subtitle="Reports and file attachments">
                     <MediaAssetManager assets={groupedMedia.document} />
                   </SectionCard>
                 ) : null}
 
                 {groupedMedia.consent.length ? (
-                  <SectionCard title="Consent Files" subtitle="Consent-related media and proofs">
+                  <SectionCard title="Consent Files" subtitle="Consent proofs and related files">
                     <MediaAssetManager assets={groupedMedia.consent} />
                   </SectionCard>
                 ) : null}
@@ -160,7 +165,7 @@ export function LeadRecordTabs({ lead }: Readonly<LeadRecordTabsProps>) {
               <div className="list-item">
                 <div>
                   <strong>No media for this patient yet</strong>
-                  <div className="muted">Upload media from the testimonial/media workflow first.</div>
+                  <div className="muted">Upload the first file using the form above.</div>
                 </div>
               </div>
             )}
