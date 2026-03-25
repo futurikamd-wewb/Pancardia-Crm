@@ -30,6 +30,10 @@ export function LeadDetailActions({ leadId }: Readonly<LeadDetailActionsProps>) 
     }
   }
 
+  function handleDownload() {
+    window.print();
+  }
+
   async function handleDelete() {
     const confirmed = window.confirm("Delete this lead?");
     if (!confirmed) {
@@ -59,6 +63,9 @@ export function LeadDetailActions({ leadId }: Readonly<LeadDetailActionsProps>) 
 
   return (
     <>
+      <button className="ghost-button" onClick={handleDownload} type="button">
+        Download
+      </button>
       <button className="ghost-button" onClick={handleShare} type="button">
         Share
       </button>
@@ -68,4 +75,3 @@ export function LeadDetailActions({ leadId }: Readonly<LeadDetailActionsProps>) 
     </>
   );
 }
-
