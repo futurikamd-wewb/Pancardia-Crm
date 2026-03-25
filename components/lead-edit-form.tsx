@@ -2,103 +2,141 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { LeadDetailItem } from "@/lib/repositories/leads";
 
-export function LeadEditForm({ lead }: Readonly<{ lead: LeadDetailItem }>) {
+type LeadEditFormProps = {
+  lead: {
+    id: string;
+    patientName: string;
+    phone: string;
+    city: string;
+    treatmentInterest: string;
+    source: string;
+    assignedTo: string;
+    status: string;
+    pipelineStage: string;
+    nextFollowUp: string;
+  };
+};
+
+export function LeadEditForm({ lead }: Readonly<LeadEditFormProps>) {
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    patientName: lead.patientName,
-    phone: lead.phone,
-    city: lead.city,
-    treatmentInterest: lead.treatmentInterest,
-    source: lead.source,
-    assignedTo: lead.assignedTo,
-    status: lead.status,
-    pipelineStage: lead.pipelineStage,
-    nextFollowUp: ""
-  });
+
+  const [patientName, setPatientName] = useState(lead.patientName);
+  const [phone, setPhone] = useState(lead.phone);
+  const [city, setCity] = useState(lead.city === "-" ? "" : lead.city);
+  const [treatmentInterest, setTreatmentInterest] = useState(
+    lead.treatmentInterest === "-" ? "" : lead.treatmentInterest
+  );
+  const [status, setStatus] = useState(lead.status);
+  const [pipelineStage, setPipelineStage] = useState(lead.pipelineStage);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState("");
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
-    setError(null);
+    setMessage("");
 
-    const response = await fetch(`/api/leads/${lead.id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(formData)
-    });
+    try {
+      const response = await fetch(`/api/leads/${lead.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          patientName,
+          phone,
+          city,
+          treatmentInterest,
+          status,
+          pipelineStage
+        })
+      });
 
-    if (!response.ok) {
-      const data = (await response.json()) as { error?: string };
-      setError(data.error ?? "Lead update nahi hua.");
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.error ?? "Update failed");
+      }
+
+      setMessage("Lead updated.");
+      router.push(`/leads/${lead.id}`);
+      router.refresh();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Update failed");
+    } finally {
       setSubmitting(false);
-      return;
     }
-
-    router.push(`/leads/${lead.id}`);
-    router.refresh();
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="form-grid">
-        <div className="field">
-          <label htmlFor="patientName">Patient name</label>
-          <input id="patientName" value={formData.patientName} onChange={(e) => setFormData((c) => ({ ...c, patientName: e.target.value }))} />
-        </div>
-        <div className="field">
-          <label htmlFor="phone">Phone</label>
-          <input id="phone" value={formData.phone} onChange={(e) => setFormData((c) => ({ ...c, phone: e.target.value }))} />
-        </div>
-        <div className="field">
-          <label htmlFor="city">City</label>
-          <input id="city" value={formData.city} onChange={(e) => setFormData((c) => ({ ...c, city: e.target.value }))} />
-        </div>
-        <div className="field">
-          <label htmlFor="treatmentInterest">Treatment</label>
-          <input id="treatmentInterest" value={formData.treatmentInterest} onChange={(e) => setFormData((c) => ({ ...c, treatmentInterest: e.target.value }))} />
-        </div>
-        <div className="field">
-          <label htmlFor="source">Source</label>
-          <input id="source" value={formData.source} onChange={(e) => setFormData((c) => ({ ...c, source: e.target.value }))} />
-        </div>
-        <div className="field">
-          <label htmlFor="assignedTo">Assigned to</label>
-          <input id="assignedTo" value={formData.assignedTo} onChange={(e) => setFormData((c) => ({ ...c, assignedTo: e.target.value }))} />
-        </div>
-        <div className="field">
-          <label htmlFor="status">Status</label>
-          <select id="status" value={formData.status} onChange={(e) => setFormData((c) => ({ ...c, status: e.target.value }))}>
-            <option>New</option>
-            <option>Contacted</option>
-            <option>Follow-up Due</option>
-            <option>Appointment Booked</option>
-            <option>Visited</option>
+    <form className="crm-form" onSubmit={handleSubmit}>
+      <div className="form-grid two-column">
+        <label className="field">
+          <span className="field-label">Patient Name</span>
+          <input value={patientName} onChange={(event) => setPatientName(event.target.value)} />
+        </label>
+
+        <label className="field">
+          <span className="field-label">Phone</span>
+          <input value={phone} onChange={(event) => setPhone(event.target.value)} />
+        </label>
+
+        <label className="field">
+          <span className="field-label">City</span>
+          <input value={city} onChange={(event) => setCity(event.target.value)} />
+        </label>
+
+        <label className="field">
+          <span className="field-label">Department / Treatment</span>
+          <input
+            value={treatmentInterest}
+            onChange={(event) => setTreatmentInterest(event.target.value)}
+          />
+        </label>
+
+        <label className="field">
+          <span className="field-label">Status</span>
+          <select value={status} onChange={(event) => setStatus(event.target.value)}>
+            <option value="New">New</option>
+            <option value="Contacted">Contacted</option>
+            <option value="Follow-up Scheduled">Follow-up Scheduled</option>
+            <option value="Qualified">Qualified</option>
+            <option value="Closed">Closed</option>
           </select>
-        </div>
-        <div className="field">
-          <label htmlFor="pipelineStage">Pipeline stage</label>
-          <select id="pipelineStage" value={formData.pipelineStage} onChange={(e) => setFormData((c) => ({ ...c, pipelineStage: e.target.value }))}>
-            <option>Inquiry</option>
-            <option>Consultation Booked</option>
-            <option>Visited Hospital</option>
-            <option>Treatment Started</option>
+        </label>
+
+        <label className="field">
+          <span className="field-label">Pipeline Stage</span>
+          <select value={pipelineStage} onChange={(event) => setPipelineStage(event.target.value)}>
+            <option value="Inquiry">Inquiry</option>
+            <option value="Consultation Booked">Consultation Booked</option>
+            <option value="Visited Hospital">Visited Hospital</option>
+            <option value="Treatment Started">Treatment Started</option>
+            <option value="Closed">Closed</option>
           </select>
-        </div>
-        <div className="field full">
-          <label htmlFor="nextFollowUp">Next follow-up</label>
-          <input id="nextFollowUp" placeholder={lead.nextFollowUp} value={formData.nextFollowUp} onChange={(e) => setFormData((c) => ({ ...c, nextFollowUp: e.target.value }))} />
-        </div>
+        </label>
+
+        <label className="field">
+          <span className="field-label">Source</span>
+          <input disabled value={lead.source} />
+        </label>
+
+        <label className="field">
+          <span className="field-label">Assigned Counselor</span>
+          <input disabled value={lead.assignedTo} />
+        </label>
+
+        <label className="field field-full">
+          <span className="field-label">Next Follow-up</span>
+          <input disabled value={lead.nextFollowUp} />
+        </label>
       </div>
-      {error ? <p className="inline-note">{error}</p> : null}
-      <div className="form-actions">
+
+      {message ? <p className="inline-note">{message}</p> : null}
+
+      <div className="hero-actions">
         <button className="pill-button" disabled={submitting} type="submit">
-          {submitting ? "Saving..." : "Save Lead"}
+          {submitting ? "Saving..." : "Save Changes"}
         </button>
       </div>
     </form>
