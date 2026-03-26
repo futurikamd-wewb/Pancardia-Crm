@@ -27,7 +27,7 @@ export async function POST(
 
     const uploadFormData = new FormData();
     uploadFormData.append("file", new Blob([buffer]), file.name);
-    uploadFormData.append("upload_preset", "ml_default");
+    uploadFormData.append("upload_preset", "lead_media_unsigned");
 
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
     const apiKey = process.env.CLOUDINARY_API_KEY;
